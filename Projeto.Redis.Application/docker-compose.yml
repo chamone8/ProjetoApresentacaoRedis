@@ -1,0 +1,23 @@
+﻿version: '3.5'
+services:
+  Projeto.redis.database:
+    container_name: "Projeto.redis.database"
+    image: "mcr.microsoft.com/mssql/server:2019-latest"
+    ports:
+      - "8001:1433"
+    volumes:
+      - Projeto.redis.database:/var/opt/mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      SA_PASSWORD: "mF2xXyAU9T85D7KZ8sgLXxG9x"
+    networks:
+      - redis
+volumes:
+  Projeto.redis.database:
+    name: Projeto.redis.database
+    external: false
+networks:
+  redis:
+    name: redis
+    driver: bridge
