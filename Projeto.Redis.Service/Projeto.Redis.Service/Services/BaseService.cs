@@ -12,7 +12,7 @@ namespace Projeto.Redis.Service.Services
 
         public BaseService(IBaseRepository<TEntity> baseRepository)
         {
-            _baseRepository = baseRepository;
+            _baseRepository = baseRepository ?? throw new ArgumentNullException(nameof(baseRepository));
         }
 
         public TEntity Add<TValidator>(TEntity obj) where TValidator : AbstractValidator<TEntity>
@@ -22,10 +22,22 @@ namespace Projeto.Redis.Service.Services
             return obj;
         }
 
-        public void Delete(Guid id) => _baseRepository.Delete(id);
-        public IList<TEntity> GetAll() => _baseRepository.GetAll();
-        public TEntity GetById(Guid id) => _baseRepository.GetById(id);
- 
+        public void Delete(Guid id)
+        {
+            _baseRepository.Delete(id);
+        }
+        public IList<TEntity> GetAll()
+        {
+            return _baseRepository.GetAll();
+
+        }
+
+        public TEntity GetById(Guid id)
+        {
+            return _baseRepository.GetById(id);
+
+        }
+
         public TEntity Update<TValidator>(TEntity obj) where TValidator : AbstractValidator<TEntity>
         {
             Validate(obj, Activator.CreateInstance<TValidator>());

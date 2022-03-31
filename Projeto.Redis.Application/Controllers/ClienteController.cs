@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 using Projeto.Redis.Domain.Entities;
 using Projeto.Redis.Domain.Interfaces;
+using Projeto.Redis.Service.Services;
 using Projeto.Redis.Service.Validators;
 using System;
 
@@ -11,9 +13,12 @@ namespace Projeto.Redis.Application.Controllers
     public class ClienteController : ControllerBase
     {
         private IBaseService<Cliente> _baseUserService;
-        public ClienteController(IBaseService<Cliente> baseUserService)
+        private readonly IServiceCache _serviceCache;
+
+        public ClienteController(IBaseService<Cliente> baseUserService, IDistributedCache distributedCache, IServiceCache serviceCache)
         {
-            _baseUserService = baseUserService ?? throw new  ArgumentNullException(nameof(baseUserService));
+            _baseUserService = baseUserService;
+            _serviceCache = serviceCache;
         }
 
         [HttpPost]
@@ -22,7 +27,12 @@ namespace Projeto.Redis.Application.Controllers
             if (cliente == null)
                 return NotFound();
 
-            return Execute(() => _baseUserService.Add<ClienteValidator>(cliente).Id);
+
+            var clienteCadastro  = _baseUserService.Add<ClienteValidator>(cliente);
+            
+            _serviceCache.Add(clienteCadastro);
+
+            return Ok();
         }
 
         [HttpPut]
@@ -50,11 +60,20 @@ namespace Projeto.Redis.Application.Controllers
                 throw ex;
             }
         }
-        
+
         [HttpGet]
         public IActionResult GetAll()
         {
-            return Execute(() => _baseUserService.GetAll());
+            var result = _serviceCache.GetAll();
+
+            return Ok(result);
+        }
+        [HttpGet("GetNoBanco")]
+        public IActionResult GetAllBanco()
+        {
+            var result = _baseUserService.GetAll();
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
@@ -63,6 +82,21 @@ namespace Projeto.Redis.Application.Controllers
             return Execute(() => _baseUserService.GetById(id));
         }
 
+        [HttpGet("AtualizarCache")]
+        public IActionResult AtualizarCache()
+        {
+            _serviceCache.AtualizarCache();
+
+            return Ok();
+        }
+
+        [HttpGet("LimparCache")]
+        public IActionResult LimparCache()
+        {
+            _serviceCache.LimparCache();
+
+            return Ok();
+        }
         private IActionResult Execute(Func<object> func)
         {
             try {

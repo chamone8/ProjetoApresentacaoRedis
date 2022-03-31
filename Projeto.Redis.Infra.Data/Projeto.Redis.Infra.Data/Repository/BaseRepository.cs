@@ -32,7 +32,9 @@ namespace Projeto.Redis.Infra.Data.Repository
             }
             catch (Exception e) {
 
-                throw e;
+                //    throw e;
+
+                return null;
             }
         }
 
